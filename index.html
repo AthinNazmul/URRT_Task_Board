@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URRT Task Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f5f5f3;
+  --surface: #ffffff;
+  --surface2: #f9f9f8;
+  --border: #e4e4e0;
+  --border-mid: #d0d0cc;
+  --text: #1a1a18;
+  --text-2: #6b6b66;
+  --text-3: #a0a09a;
+  --teal: #0d9488;
+  --teal-lt: #f0faf9;
+  --teal-bd: #ccede9;
+  --todo: #2563eb;
+  --todo-lt: #eff4ff;
+  --todo-bd: #c7d9ff;
+  --prog: #d97706;
+  --prog-lt: #fffbeb;
+  --prog-bd: #fde68a;
+  --done: #16a34a;
+  --done-lt: #f0faf4;
+  --done-bd: #bbf7d0;
+  --danger: #dc2626;
+  --danger-lt: #fef2f2;
+  --danger-bd: #fecaca;
+  --warn: #d97706;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.logo-wrap { width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border-mid); flex-shrink: 0; }
+.logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.header-title { flex: 1; }
+.header-title h1 { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.header-title p  { font-size: 15px; color: var(--text-3); margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 2rem; }
+.global-stats { display: flex; gap: 1.5rem; }
+.gstat { display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--text-2); }
+.gstat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.gstat-dot.todo { background: var(--todo); }
+.gstat-dot.prog { background: var(--prog); }
+.gstat-dot.done { background: var(--done); }
+.gstat-num { font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; font-size: 20px; }
+.btn-add-team {
+  display: flex; align-items: center; gap: 6px; background: none;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-2); font-family: 'Inter', sans-serif; font-size: 15px;
+  padding: 8px 16px; cursor: pointer; transition: border-color 0.1s, color 0.1s; white-space: nowrap;
+}
+.btn-add-team:hover { border-color: var(--teal); color: var(--teal); }
+.btn-add-team:disabled { cursor: not-allowed; opacity: 0.5; border-color: var(--border); color: var(--text-3); }
+
+/* ── LOGS & JOIN OVERLAY ── */
+.btn-logs {
+  background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-2); font-size: 15px; padding: 8px 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all 0.1s;
+}
+.btn-logs:hover { border-color: var(--todo); color: var(--todo); background: var(--todo-lt); }
+
+.join-overlay {
+  position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 2rem;
+}
+.join-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 3rem; width: 100%; max-width: 480px; text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+}
+.join-card h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+.join-card p { color: var(--text-3); margin-bottom: 2rem; }
+.join-input-wrap { position: relative; margin-bottom: 1.5rem; }
+.join-input {
+  width: 100%; font-size: 24px; font-weight: 700; text-align: center; letter-spacing: 0.2em;
+  padding: 1rem; border: 2px solid var(--border); border-radius: var(--radius);
+  font-family: 'DM Mono', monospace; outline: none; transition: border-color 0.1s;
+}
+.join-input:focus { border-color: var(--teal); }
+.join-btn {
+  width: 100%; background: var(--teal); color: #fff; border: none; border-radius: var(--radius);
+  padding: 1rem; font-size: 18px; font-weight: 700; cursor: pointer; transition: background 0.1s;
+}
+.join-btn:hover { background: #0b7c71; }
+
+.log-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+.log-item {
+  padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; line-height: 1.4;
+}
+.log-item .log-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--text-3); }
+.log-item .log-lead { color: var(--todo); }
+.log-item .log-time { color: var(--text-3); }
+.log-item .log-details { color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+.clock { text-align: right; }
+.clock-time { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text); }
+.clock-date { font-size: 14px; color: var(--text-3); margin-top: 2px; }
+.settings-icon {
+  background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 20px;
+  padding: 4px 8px; border-radius: 6px; line-height: 1; transition: color 0.1s, background 0.1s;
+  display: flex; align-items: center; justify-content: center;
+}
+.settings-icon:hover { color: var(--teal); background: var(--teal-lt); }
+.admin-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 12px; background: var(--done-lt); color: var(--done); border: 1px solid var(--done-bd); }
+.admin-user { text-align: right; font-size: 13px; color: var(--text-2); }
+
+/* ── ADMIN LOGIN ── */
+.admin-lock { display: inline-block; cursor: pointer; color: var(--text-3); font-size: 12px; text-decoration: underline; transition: color 0.1s; }
+.admin-lock:hover { color: var(--danger); }
+.admin-section { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;
+  background: var(--surface2); margin-bottom: 1rem; }
+.admin-section h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 0.8rem; }
+.admin-info { font-size: 13px; color: var(--text-2); margin-bottom: 1rem; background: #eff4ff; border-left: 3px solid var(--todo); padding: 0.8rem; border-radius: 4px; }
+.admin-actions { display: flex; gap: 0.8rem; }
+.admin-btn { flex: 1; background: var(--todo); border: none; border-radius: var(--radius-sm); color: #fff;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 8px 16px;
+  cursor: pointer; transition: background 0.1s; }
+.admin-btn:hover { background: #1e40af; }
+.admin-btn-logout { background: var(--danger); }
+.admin-btn-logout:hover { background: #b91c1c; }
+
+/* ── SETTINGS MODAL ── */
+.settings-form { display: flex; flex-direction: column; gap: 1.2rem; max-height: 400px; overflow-y: auto; }
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-group label { font-size: 14px; font-weight: 600; color: var(--text); }
+.form-group input[type="text"], .form-group textarea, .form-group input[type="password"] {
+  font-family: 'Inter', sans-serif; font-size: 15px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text);
+  padding: 10px 13px; outline: none; transition: border-color 0.1s;
+}
+.form-group input:focus, .form-group textarea:focus { border-color: var(--teal); }
+.form-group textarea { resize: vertical; min-height: 60px; font-size: 14px; }
+.logo-preview { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--border);
+  overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--surface2);
+}
+.logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.logo-preview.empty { color: var(--text-3); font-size: 14px; font-weight: 500; }
+
+/* ── DUE SECTION BAR ── */
+#due-section {
+  background: var(--surface); border: 2px solid var(--danger-bd);
+  border-radius: var(--radius); margin: 1.1rem 1.5rem 0; overflow: hidden;
+}
+#due-section.hidden { display: none; }
+.due-section-header {
+  background: var(--danger-lt); border-bottom: 1px solid var(--danger-bd);
+  padding: 12px 20px; display: flex; align-items: center; gap: 10px;
+}
+.due-section-header h2 { font-size: 17px; font-weight: 700; color: var(--danger); flex: 1; letter-spacing: -0.01em; }
+.due-section-toggle {
+  background: none; border: 1px solid var(--danger-bd); border-radius: var(--radius-sm);
+  color: var(--danger); font-size: 14px; font-weight: 500; padding: 5px 14px;
+  cursor: pointer; transition: background 0.1s; font-family: 'Inter', sans-serif;
+}
+.due-section-toggle:hover { background: var(--danger-bd); }
+#due-tasks-grid { padding: 14px 18px 16px; display: flex; flex-wrap: wrap; gap: 10px; }
+.due-chip {
+  background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 15px;
+  display: flex; align-items: flex-start; gap: 9px;
+  min-width: 220px; flex: 1 1 220px; max-width: 340px; border: 1px solid var(--border);
+}
+.due-chip.overdue  { border-color: var(--danger-bd); background: var(--danger-lt); }
+.due-chip.duetoday { border-color: #fdba74; background: #fff7ed; }
+.due-chip.soon     { border-color: var(--prog-bd); background: var(--prog-lt); }
+.due-chip-icon  { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+.due-chip-body  { flex: 1; min-width: 0; }
+.due-chip-title { font-size: 14px; font-weight: 600; color: var(--text); word-break: break-word; line-height: 1.3; }
+.due-chip-meta  { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+.due-chip-meta .name { font-weight: 700; color: var(--danger); }
+.due-chip-meta .team { color: var(--text-3); }
+.due-chip-meta .when { font-weight: 700; }
+.due-chip.overdue  .when { color: var(--danger); }
+.due-chip.duetoday .when { color: #c2410c; }
+.due-chip.soon     .when { color: var(--warn); }
+
+/* ── MAIN GRID ── */
+main {
+  flex: 1; padding: 1.3rem 1.5rem 2rem;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.2rem; align-items: start;
+}
+
+/* ── TEAM CARD ── */
+.team-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
+.team-header { padding: 16px 18px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.team-accent { width: 4px; height: 20px; border-radius: 2px; background: var(--teal); flex-shrink: 0; }
+.team-name-wrap { flex: 1; min-width: 0; }
+.team-name {
+  font-size: 17px; font-weight: 700; color: var(--text); display: block; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: color 0.1s;
+}
+.team-name:hover { color: var(--teal); }
+.team-actions { display: flex; align-items: center; gap: 6px; }
+.team-count { font-family: 'DM Mono', monospace; font-size: 15px; color: var(--text-3); }
+.icon-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 18px;
+  padding: 3px 6px; border-radius: 4px; line-height: 1; transition: color 0.1s, background 0.1s; display: flex; align-items: center;
+}
+.icon-btn:hover { color: var(--danger); background: var(--danger-lt); }
+
+/* ── TASK LIST ── */
+.task-list {
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+  max-height: 380px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-mid) transparent;
+}
+.task-list::-webkit-scrollbar { width: 3px; }
+.task-list::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
+.empty-msg { text-align: center; padding: 28px 0; font-size: 16px; color: var(--text-3); }
+
+/* ── TASK ITEM ── */
+.task-item {
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px;
+  display: flex; gap: 11px; align-items: flex-start; background: var(--surface2);
+  transition: border-color 0.1s; position: relative;
+}
+.task-item:hover { border-color: var(--border-mid); }
+.task-item:hover .task-del { opacity: 1; }
+.task-item.done-task { opacity: 0.42; }
+.task-item.done-task .task-title { text-decoration: line-through; color: var(--text-3); }
+.check-box {
+  width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border-mid);
+  flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  background: transparent; transition: background 0.1s, border-color 0.1s; font-size: 11px; color: transparent; user-select: none;
+}
+.check-box.checked { background: var(--done); border-color: var(--done); color: #fff; }
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.35; word-break: break-word; }
+.task-title-input {
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: var(--text);
+  border: 1px solid var(--teal); border-radius: 3px; padding: 1px 6px; outline: none; width: 100%;
+}
+.task-meta { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.badge {
+  display: inline-flex; align-items: center; font-size: 13px; font-weight: 500;
+  padding: 3px 10px; border-radius: 5px; white-space: nowrap; border: 1px solid transparent;
+}
+.badge-todo   { background: var(--todo-lt); color: var(--todo); border-color: var(--todo-bd); }
+.badge-inprog { background: var(--prog-lt); color: var(--prog); border-color: var(--prog-bd); }
+.badge-done   { background: var(--done-lt); color: var(--done); border-color: var(--done-bd); }
+.badge-member { background: var(--teal-lt); color: var(--teal); border-color: var(--teal-bd); }
+.badge-date { background: transparent; color: var(--text-2); border-color: transparent; font-family: 'DM Mono', monospace; font-size: 13px; padding-left: 0; }
+.badge-date.overdue { color: var(--danger); font-weight: 700; }
+.badge-date.soon    { color: var(--warn); font-weight: 700; }
+.task-del {
+  position: absolute; top: 9px; right: 9px; background: none; border: none; cursor: pointer;
+  font-size: 17px; color: var(--text-3); opacity: 0; transition: opacity 0.1s, color 0.1s;
+  padding: 2px 5px; border-radius: 3px; line-height: 1;
+}
+.task-del:hover { color: var(--danger); background: var(--danger-lt); }
+
+/* ── ADD FORM ── */
+.add-form { border-top: 1px solid var(--border); padding: 11px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface2); }
+.add-form input, .add-form select {
+  font-family: 'Inter', sans-serif; font-size: 15px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text);
+  padding: 8px 11px; outline: none; transition: border-color 0.1s;
+}
+.add-form input:focus, .add-form select:focus { border-color: var(--teal); }
+.add-form input::placeholder { color: var(--text-3); }
+.add-form input[type="date"] { font-family: 'DM Mono', monospace; color-scheme: light; }
+.form-row { display: flex; gap: 7px; }
+.f-task   { flex: 1; }
+.f-member { flex: 0 0 140px; }
+.f-status { flex: 0 0 130px; }
+.f-date   { flex: 0 0 145px; }
+.btn-add {
+  flex-shrink: 0; background: var(--teal); border: none; border-radius: var(--radius-sm); color: #fff;
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+  padding: 8px 18px; cursor: pointer; transition: background 0.1s; white-space: nowrap;
+}
+.btn-add:hover { background: #0b7c71; }
+
+/* ── MODAL ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.22); z-index: 300; align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+.modal h2 { font-size: 19px; font-weight: 700; margin-bottom: 1rem; }
+.modal input {
+  font-family: 'Inter', sans-serif; font-size: 16px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text);
+  padding: 10px 13px; outline: none; width: 100%; transition: border-color 0.1s;
+}
+.modal input:focus { border-color: var(--teal); }
+.modal input::placeholder { color: var(--text-3); }
+.modal-actions { display: flex; gap: 8px; margin-top: 1.2rem; justify-content: flex-end; }
+.btn-confirm { background: var(--teal); border: none; border-radius: var(--radius-sm); color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 9px 22px; cursor: pointer; transition: background 0.1s; }
+.btn-confirm:hover { background: #0b7c71; }
+.btn-cancel { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-family: 'Inter', sans-serif; font-size: 15px; padding: 9px 18px; cursor: pointer; transition: border-color 0.1s; }
+.btn-cancel:hover { border-color: var(--border-mid); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(5px);
+  background: var(--text); color: #fff; font-size: 15px; font-weight: 500;
+  padding: 10px 20px; border-radius: var(--radius-sm); z-index: 9999; opacity: 0;
+  transition: opacity 0.18s, transform 0.18s; pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--border); padding: 12px 2rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+footer span { font-size: 14px; color: var(--text-3); }
+footer a { color: var(--teal); text-decoration: none; font-size: 14px; }
+
+@media (max-width: 1200px) { main { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 760px)  { main { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════
+   CONTINUOUS SIDE ALERT TICKER
+   Slides in from right, auto-cycles all due tasks
+   ═══════════════════════════════════════════════ */
+#alert-ticker {
+  position: fixed;
+  right: 24px;
+  bottom: 32px;
+  z-index: 8000;
+  pointer-events: none;
+  width: 360px;
+}
+
+.ticker-card {
+  width: 360px;
+  border-radius: 16px;
+  pointer-events: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10);
+  overflow: hidden;
+  transform: translateX(130%);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease;
+  border: 2.5px solid transparent;
+  background: #fff;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+.ticker-card.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+.ticker-card.hiding {
+  transform: translateX(130%);
+  opacity: 0;
+}
+
+/* Type colours */
+.ticker-card.type-overdue { border-color: #dc2626; }
+.ticker-card.type-today   { border-color: #f97316; }
+.ticker-card.type-soon    { border-color: #d97706; }
+
+/* Top colour strip */
+.ticker-stripe { height: 7px; width: 100%; }
+.type-overdue .ticker-stripe { background: linear-gradient(90deg, #dc2626, #ef4444); }
+.type-today   .ticker-stripe { background: linear-gradient(90deg, #ea580c, #f97316); }
+.type-soon    .ticker-stripe { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+/* Label row */
+.ticker-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px 0;
+}
+.ticker-label {
+  font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  display: flex; align-items: center; gap: 6px;
+}
+.type-overdue .ticker-label { color: #dc2626; }
+.type-today   .ticker-label { color: #ea580c; }
+.type-soon    .ticker-label { color: #d97706; }
+
+.ticker-counter {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--text-3); font-weight: 500;
+  background: var(--surface2); border-radius: 20px; padding: 2px 10px;
+  border: 1px solid var(--border);
+}
+
+/* Task name — BIG for signage */
+.ticker-task {
+  font-size: 20px; font-weight: 800;
+  color: var(--text); line-height: 1.28;
+  word-break: break-word;
+  padding: 8px 16px 0;
+  letter-spacing: -0.02em;
+}
+
+/* Person pill */
+.ticker-person-row { padding: 10px 16px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ticker-person {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 16px; font-weight: 700;
+  padding: 4px 14px 4px 10px; border-radius: 24px;
+}
+.type-overdue .ticker-person { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
+.type-today   .ticker-person { background: #fff7ed; color: #c2410c; border: 1.5px solid #fdba74; }
+.type-soon    .ticker-person { background: #fffbeb; color: #b45309; border: 1.5px solid #fde68a; }
+
+.ticker-team-tag {
+  font-size: 13px; color: var(--text-3); font-weight: 500;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 11px;
+}
+
+/* Deadline line */
+.ticker-deadline {
+  font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700;
+  padding: 8px 16px 0;
+}
+.type-overdue .ticker-deadline { color: #dc2626; }
+.type-today   .ticker-deadline { color: #ea580c; }
+.type-soon    .ticker-deadline { color: #d97706; }
+
+/* Meme footer */
+.ticker-footer {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px 14px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.ticker-meme-img {
+  width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
+  border: 2px solid var(--border); flex-shrink: 0;
+}
+.ticker-meme-text { font-size: 13px; color: var(--text-2); font-style: italic; line-height: 1.4; flex: 1; }
+
+/* Progress bar sweep */
+.ticker-progress { height: 4px; background: var(--border); }
+.ticker-progress-bar { height: 100%; width: 0%; }
+.type-overdue .ticker-progress-bar { background: #dc2626; }
+.type-today   .ticker-progress-bar { background: #f97316; }
+.type-soon    .ticker-progress-bar { background: #d97706; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap"><img id="headerLogo" src="URRT_About_Logo.png" alt="Logo"></div>
+  <div class="header-title">
+    <h1 id="headerTitle">UIU Rescue Rover Team</h1>
+    <p id="headerSubtitle">Subteam Task &amp; Deadline Board · #URRT</p>
+  </div>
+  <div class="header-right">
+    <div class="global-stats">
+      <div class="gstat"><div class="gstat-dot todo"></div><span class="gstat-num" id="sTodo">0</span><span>to do</span></div>
+      <div class="gstat"><div class="gstat-dot prog"></div><span class="gstat-num" id="sInprog">0</span><span>in progress</span></div>
+      <div class="gstat"><div class="gstat-dot done"></div><span class="gstat-num" id="sDone">0</span><span>done</span></div>
+    </div>
+    <button class="btn-add-team" onclick="openAddTeam()">+ Add subteam</button>
+    <button class="btn-logs" id="viewLogsBtn" onclick="openLogs()" style="display: none;">📋 Activity Log</button>
+    <button class="settings-icon" onclick="openSettings()" title="Settings">⚙️</button>
+    <div class="admin-user">
+      <div id="adminStatus" style="display: none;">
+        <span class="admin-badge">👤 <span id="adminName">Admin</span></span>
+        <button class="admin-lock" onclick="logout()" style="margin-left: 6px;">logout</button>
+      </div>
+      <button class="admin-lock" id="adminLoginBtn" onclick="openAdminLogin()">🔓 Login as Team Lead</button>
+    </div>
+    <div class="clock">
+      <div class="clock-time" id="cTime">--:--:--</div>
+      <div class="clock-date" id="cDate">---</div>
+    </div>
+  </div>
+</header>
+
+<div id="due-section">
+  <div class="due-section-header">
+    <span style="font-size:20px;">🚨</span>
+    <h2 id="due-section-title">Critical Tasks</h2>
+    <button class="due-section-toggle" onclick="toggleDueSection()">Hide</button>
+  </div>
+  <div id="due-tasks-grid"></div>
+</div>
+
+<main id="grid"></main>
+
+<footer>
+  <span>United International University</span>
+  <a href="http://rescuerover.uiu.ac.bd" target="_blank">rescuerover.uiu.ac.bd ↗</a>
+</footer>
+
+<!-- SUBTEAM MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><h2 id="modalTitle">Subteam</h2><input id="modalInput" type="text" placeholder="Name…" onkeydown="if(event.key==='Enter')confirmModal()"><div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-confirm" onclick="confirmModal()">Confirm</button></div></div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="width: 480px;">
+    <h2>Settings</h2>
+    <div class="settings-form">
+      <div id="adminSection" class="admin-section" style="display: none;">
+        <h3>🔐 Management</h3>
+        <div class="form-group"><label>Lead Name</label><input type="text" id="adminNameInput"></div>
+        <div class="form-group"><label>Update Password</label><input type="password" id="adminPassInput" placeholder="New password"></div>
+      </div>
+      <div id="nonAdminInfo" class="admin-info" style="display: none;">ℹ️ Lead access required. <span class="admin-lock" onclick="openAdminLogin()">Login</span></div>
+      <div class="form-group" id="logoGroup">
+        <label>Team Logo</label>
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+          <div class="logo-preview empty" id="logoPreview">📷</div>
+          <div style="flex: 1;">
+            <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(event)" disabled>
+            <p style="font-size: 12px; color: var(--text-3); margin-top: 6px;">PNG, JPG, GIF (max 2MB)</p>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" id="nameGroup">
+        <label>Team Name</label>
+        <input type="text" id="teamNameInput" placeholder="e.g., Development Team" disabled>
+      </div>
+      <div class="form-group" id="descGroup">
+        <label>Team Description</label>
+        <textarea id="teamDescInput" placeholder="e.g., Mission control for subteams" disabled></textarea>
+      </div>
+      <div class="form-group">
+        <label>Join Code (for viewers)</label>
+        <input type="text" id="joinCodeInput" placeholder="Set a code for all members" disabled>
+        <p style="font-size: 12px; color: var(--text-3); margin-top: 4px;">Members must enter this to see the board</p>
+      </div>
+      <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between;">
+        <label style="cursor: pointer;">Allow new Team Lead registrations</label>
+        <input type="checkbox" id="allowRegInput" style="width: 20px; height: 20px; cursor: pointer;" disabled>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">Close</button>
+      <button class="btn-confirm" id="saveSettingsBtn" onclick="saveSettings()" disabled>Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY LOG MODAL -->
+<div class="overlay" id="logOverlay" onclick="if(event.target===this)closeLogs()">
+  <div class="modal" style="width: 550px;"><h2>📋 Activity Log</h2><div id="logList" class="log-list"></div><div class="modal-actions"><button class="btn-confirm" onclick="closeLogs()">Done</button></div></div>
+</div>
+
+<!-- JOIN OVERLAY -->
+<div id="joinOverlay" class="join-overlay">
+  <div class="join-card">
+    <div style="width:80px;height:80px;margin:0 auto 1.5rem;border-radius:50%;overflow:hidden;border:3px solid var(--teal-bd);"><img id="joinLogo" src="URRT_About_Logo.png" alt="Logo" style="width:100%;height:100%;object-fit:cover;"></div>
+    <h1 id="joinTitle">Access Required</h1>
+    <p>Please enter the team join code to continue.</p>
+    <div class="join-input-wrap"><input type="text" id="joinInput" class="join-input" placeholder="••••" maxlength="12" onkeydown="if(event.key==='Enter')verifyJoinCode()"></div>
+    <button class="join-btn" onclick="verifyJoinCode()">Join Team</button>
+    <p style="margin-top:2rem;font-size:13px;"><span class="admin-lock" onclick="openAdminLogin()">Login as Team Lead</span></p>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="overlay" id="adminLoginOverlay" onclick="if(event.target===this)closeAdminLogin()">
+  <div class="modal" style="width: 380px;">
+    <h2>🔐 Lead Access</h2>
+    <div style="margin-bottom: 1.2rem; padding: 0.8rem; background: var(--todo-lt); border-left: 3px solid var(--todo); border-radius: 4px;">
+      <p style="font-size: 13px; color: var(--text-2);">Enter credentials to access management tools</p>
+    </div>
+    <div class="form-group">
+      <label>Lead Name</label>
+      <input type="text" id="loginNameInput" placeholder="Your name">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassInput" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAdminLogin()">Cancel</button>
+      <button class="btn-confirm" onclick="adminLogin()">Login</button>
+    </div>
+    <p id="regLinkRow" style="font-size: 12px; color: var(--text-3); margin-top: 1rem; text-align: center;">
+      First time? <span class="admin-lock" onclick="switchToSetup()">Register as Lead</span>
+    </p>
+  </div>
+</div>
+
+<!-- ADMIN SETUP MODAL -->
+<div class="overlay" id="adminSetupOverlay" onclick="if(event.target===this)closeAdminSetup()">
+  <div class="modal" style="width: 380px;"><h2>🔑 Lead Account</h2><div class="form-group"><label>Name</label><input type="text" id="setupNameInput"></div><div class="form-group"><label>Password</label><input type="password" id="setupPassInput"></div><div class="form-group"><label>Confirm</label><input type="password" id="setupConfirmInput" onkeydown="if(event.key==='Enter')setupAdmin()"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeAdminSetup()">Cancel</button><button class="btn-confirm" onclick="setupAdmin()">Create</button></div></div>
+</div>
+
+<div id="alert-ticker"></div>
+<div id="toast"></div>
+
+<script>
+const SL = { todo:'To Do', inprog:'In Progress', done:'Done' };
+let teams = [], tasks = {};
+let config = { teamName: 'UIU Rescue Rover Team', teamDesc: 'Subteam Task Board', logo: null, joinCode: 'URRT2026', allowRegistration: true };
+let admin = { isLoggedIn: false, name: null };
+let logs = [];
+
+/* ── HELPERS ── */
+function uid() { return Math.random().toString(36).substring(2, 9); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(m) { const el = document.getElementById('toast'); el.textContent = m; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1800); }
+function fmtDate(s) { if (!s) return ''; return new Date(s).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}); }
+function dlDiff(s) {
+  if (!s) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const d   = new Date(s); d.setHours(0,0,0,0);
+  return (d - now) / 86400000;
+}
+function dlClass(s) { const d = dlDiff(s); if (d === null) return ''; return d < 0 ? 'overdue' : d <= 3 ? 'soon' : ''; }
+function dlSuffix(s) { const c = dlClass(s); return c==='overdue'?' · Overdue':c==='soon'?' · Due soon':''; }
+
+/* ── DATA ── */
+function save() { localStorage.setItem('urrt_v4', JSON.stringify({teams, tasks})); }
+function load() {
+  try {
+    const raw = localStorage.getItem('urrt_v4');
+    if (raw) { const d = JSON.parse(raw); teams = d.teams||[]; tasks = d.tasks||{}; }
+  } catch(e) {}
+  if (!teams.length) {
+    teams = [
+      {id:'software', name:'Software & Autonomous'},
+      {id:'mechanical', name:'Mechanical'},
+      {id:'electrical', name:'Electrical'},
+      {id:'arena', name:'Arena'},
+      {id:'prints3d', name:'3D Prints'}
+    ];
+    teams.forEach(t => { if(!tasks[t.id]) tasks[t.id] = []; });
+  }
+}
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem('urrt_config');
+    if (raw) config = { ...config, ...JSON.parse(raw) };
+  } catch(e) {}
+  applyConfig();
+}
+function applyConfig() {
+  document.getElementById('headerTitle').textContent = config.teamName;
+  document.getElementById('headerSubtitle').textContent = config.teamDesc;
+  if (config.logo) {
+    document.getElementById('headerLogo').src = config.logo;
+  }
+}
+function saveConfig() { localStorage.setItem('urrt_config', JSON.stringify(config)); applyConfig(); }
+function loadLogs() { try { const raw = localStorage.getItem('urrt_logs'); if (raw) logs = JSON.parse(raw); } catch(e) {} }
+function saveLogs() { localStorage.setItem('urrt_logs', JSON.stringify(logs)); }
+
+/* ── AUTH ── */
+function loadAdmin() {
+  try {
+    if (sessionStorage.getItem('admin_logged_in') === 'true') {
+      admin.isLoggedIn = true;
+      admin.name = sessionStorage.getItem('admin_name');
+    }
+  } catch(e) {}
+  updateAdminUI();
+}
+function updateAdminUI() {
+  const isL = admin.isLoggedIn;
+  document.getElementById('adminStatus').style.display = isL ? 'block' : 'none';
+  document.getElementById('adminLoginBtn').style.display = isL ? 'none' : 'block';
+  document.getElementById('viewLogsBtn').style.display = isL ? 'flex' : 'none';
+  document.getElementById('adminName').textContent = admin.name || 'Admin';
+  const addBtn = document.querySelector('.btn-add-team');
+  if(addBtn) addBtn.style.display = isL ? 'flex' : 'none';
+  const setBtn = document.querySelector('.settings-icon');
+  if(setBtn) setBtn.style.display = isL ? 'flex' : 'none';
+  enableAdminFeatures(isL);
+}
+function enableAdminFeatures(en) {
+  ['logoInput','teamNameInput','teamDescInput','joinCodeInput','allowRegInput','saveSettingsBtn'].forEach(id => { 
+    const el = document.getElementById(id); if(el) el.disabled = !en; 
+  });
+  document.getElementById('adminSection').style.display = en ? 'block' : 'none';
+  document.getElementById('nonAdminInfo').style.display = en ? 'none' : 'block';
+}
+function openAdminLogin() {
+  const raw = localStorage.getItem('urrt_accounts');
+  const hasA = raw && JSON.parse(raw).length > 0;
+  if (hasA) {
+    document.getElementById('adminLoginOverlay').classList.add('open');
+    document.getElementById('regLinkRow').style.display = config.allowRegistration ? 'block' : 'none';
+  } else {
+    document.getElementById('adminSetupOverlay').classList.add('open');
+  }
+}
+function closeAdminLogin() { document.getElementById('adminLoginOverlay').classList.remove('open'); }
+function closeAdminSetup() { document.getElementById('adminSetupOverlay').classList.remove('open'); }
+function switchToSetup() { closeAdminLogin(); document.getElementById('adminSetupOverlay').classList.add('open'); }
+function setupAdmin() {
+  const n = document.getElementById('setupNameInput').value.trim(), p = document.getElementById('setupPassInput').value, c = document.getElementById('setupConfirmInput').value;
+  if (!n || !p || p !== c) { alert('Invalid input'); return; }
+  let accounts = []; try { const raw = localStorage.getItem('urrt_accounts'); if (raw) accounts = JSON.parse(raw); } catch(e) {}
+  accounts.push({ name: n, pass: btoa(p) });
+  localStorage.setItem('urrt_accounts', JSON.stringify(accounts));
+  loginUser(n); closeAdminSetup();
+}
+function adminLogin() {
+  const n = document.getElementById('loginNameInput').value.trim(), p = document.getElementById('loginPassInput').value;
+  try {
+    const accounts = JSON.parse(localStorage.getItem('urrt_accounts'));
+    const acc = accounts.find(a => a.name.toLowerCase() === n.toLowerCase() && a.pass === btoa(p));
+    if (acc) { loginUser(acc.name); closeAdminLogin(); } else { alert('Invalid credentials'); }
+  } catch(e) { alert('No lead accounts found'); }
+}
+function loginUser(name) {
+  admin.isLoggedIn = true; admin.name = name;
+  sessionStorage.setItem('admin_logged_in', 'true'); sessionStorage.setItem('admin_name', name);
+  sessionStorage.setItem('join_verified', 'true');
+  updateAdminUI(); checkJoinCode(); renderAll(); logAction('Login', `${name} logged in`);
+}
+function logout() { admin.isLoggedIn = false; sessionStorage.clear(); updateAdminUI(); renderAll(); checkJoinCode(); }
+function checkJoinCode() {
+  const ver = sessionStorage.getItem('join_verified') === 'true';
+  document.getElementById('joinOverlay').style.display = ver ? 'none' : 'flex';
+  if(!ver) {
+    document.getElementById('joinTitle').textContent = config.teamName;
+    if(config.logo) document.getElementById('joinLogo').src = config.logo;
+    document.getElementById('joinInput').focus();
+  }
+}
+function verifyJoinCode() {
+  if (document.getElementById('joinInput').value.trim() === config.joinCode) {
+    sessionStorage.setItem('join_verified', 'true'); checkJoinCode(); toast('Access Granted');
+  } else { alert('Invalid join code'); }
+}
+
+/* ── SETTINGS ── */
+function openSettings() {
+  document.getElementById('teamNameInput').value = config.teamName;
+  document.getElementById('teamDescInput').value = config.teamDesc;
+  document.getElementById('joinCodeInput').value = config.joinCode;
+  document.getElementById('allowRegInput').checked = config.allowRegistration;
+  document.getElementById('adminNameInput').value = admin.name || '';
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+function handleLogoUpload(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader(); reader.onload = (ev) => { config.logo = ev.target.result; applyConfig(); }; reader.readAsDataURL(file);
+}
+function saveSettings() {
+  config.teamName = document.getElementById('teamNameInput').value.trim();
+  config.teamDesc = document.getElementById('teamDescInput').value.trim();
+  config.joinCode = document.getElementById('joinCodeInput').value.trim();
+  config.allowRegistration = document.getElementById('allowRegInput').checked;
+  saveConfig();
+  logAction('Config Updated', 'Settings saved'); closeSettings(); toast('Saved');
+}
+
+/* ── MODALS ── */
+let modalMode = null, modalTeamId = null;
+function openAddTeam() { modalMode='addTeam'; document.getElementById('modalTitle').textContent='New Subteam'; document.getElementById('overlay').classList.add('open'); }
+function openRenameTeam(tid) {
+  if(!admin.isLoggedIn) return;
+  const team = teams.find(t => t.id === tid); if(!team) return;
+  modalMode='renameTeam'; modalTeamId = tid;
+  document.getElementById('modalTitle').textContent='Rename Subteam';
+  document.getElementById('modalInput').value = team.name;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function confirmModal() {
+  const v = document.getElementById('modalInput').value.trim(); if(!v) return;
+  if(modalMode==='addTeam'){ const id='t'+Date.now(); teams.push({id, name:v}); tasks[id]=[]; save(); renderAll(); }
+  else if(modalMode==='renameTeam'){ const team = teams.find(t=>t.id===modalTeamId); if(team){ team.name=v; save(); renderAll(); } }
+  closeModal();
+}
+function deleteTeam(id) { if(confirm('Delete subteam and all tasks?')){ teams=teams.filter(t=>t.id!==id); delete tasks[id]; save(); renderAll(); } }
+function toggleTask(tid, id) { const t = (tasks[tid]||[]).find(x=>x.id===id); if(t){ t.status=t.status==='done'?'todo':'done'; save(); renderAll(); } }
+function deleteTask(tid, id) { tasks[tid] = tasks[tid].filter(x=>x.id!==id); save(); renderAll(); }
+function addTask(tid) {
+  const title = document.getElementById('it-'+tid).value.trim();
+  const owner = document.getElementById('im-'+tid).value.trim();
+  const status = document.getElementById('is-'+tid).value;
+  const date = document.getElementById('id-'+tid).value;
+  if(!title) return;
+  if(!tasks[tid]) tasks[tid] = [];
+  tasks[tid].push({id:uid(), title, member:owner, status, deadline:date, created:Date.now()});
+  document.getElementById('it-'+tid).value=''; document.getElementById('im-'+tid).value=''; document.getElementById('id-'+tid).value='';
+  save(); renderAll();
+}
+function startEditTask(tid, id) {
+  if(!admin.isLoggedIn) return;
+  const item = document.querySelector(`[data-task-id="${id}"]`); if(!item) return;
+  const titleEl = item.querySelector('.task-title');
+  const t = tasks[tid].find(x=>x.id===id); if(!t) return;
+  const inp = document.createElement('input');
+  inp.className='task-title-input'; inp.value=t.title;
+  titleEl.replaceWith(inp); inp.focus(); inp.select();
+  function commit(){ const v = inp.value.trim(); if(v){ t.title=v; save(); } renderAll(); }
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter')inp.blur(); if(e.key==='Escape')renderAll(); });
+}
+
+/* ── RENDER ── */
+function renderTeam(team) {
+  const list = tasks[team.id]||[];
+  const sorted = [...list].sort((a,b)=>({todo:0,inprog:1,done:2}[a.status]-{todo:0,inprog:1,done:2}[b.status]));
+  const doneN = list.filter(x=>x.status==='done').length;
+  
+  const items = sorted.length===0 ? '<div class="empty-msg">No active tasks</div>' : sorted.map(t => `
+    <div class="task-item${t.status==='done'?' done-task':''}" data-task-id="${t.id}">
+      <div class="check-box${t.status==='done'?' checked':''}" onclick="${admin.isLoggedIn ? `toggleTask('${team.id}','${t.id}')` : ''}">${t.status==='done'?'✓':''}</div>
+      <div class="task-body">
+        <div class="task-title" ${admin.isLoggedIn ? `ondblclick="startEditTask('${team.id}','${t.id}')" title="Double-click to edit"` : ''}>${esc(t.title)}</div>
+        <div class="task-meta">
+          <span class="badge badge-${t.status}">${SL[t.status]}</span>
+          ${t.member?`<span class="badge badge-member">↳ ${esc(t.member)}</span>`:''}
+          ${t.deadline?`<span class="badge badge-date ${dlClass(t.deadline)}">📅 ${fmtDate(t.deadline)}${dlSuffix(t.deadline)}</span>`:''}
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask('${team.id}','${t.id}')" ${!admin.isLoggedIn?'style="display:none"':''}>×</button>
+    </div>`).join('');
+  
+  const addForm = admin.isLoggedIn ? `
+    <div class="add-form">
+      <div class="form-row">
+        <input class="f-task" id="it-${team.id}" type="text" placeholder="Task description…" onkeydown="if(event.key==='Enter')addTask('${team.id}')">
+        <input class="f-member" id="im-${team.id}" type="text" placeholder="Assigned to…">
+      </div>
+      <div class="form-row">
+        <select class="f-status" id="is-${team.id}"><option value="todo">To Do</option><option value="inprog">In Progress</option><option value="done">Done</option></select>
+        <input class="f-date" id="id-${team.id}" type="date">
+        <button class="btn-add" onclick="addTask('${team.id}')">Add task</button>
+      </div>
+    </div>` : '';
+
+  return `<div class="team-card"><div class="team-header"><div class="team-accent"></div><span class="team-name" onclick="${admin.isLoggedIn ? `openRenameTeam('${team.id}')` : ''}">${esc(team.name)}</span><div class="team-actions"><span class="team-count">${doneN}/${list.length}</span><button class="icon-btn" onclick="deleteTeam('${team.id}')" ${!admin.isLoggedIn?'style="display:none"':''}>×</button></div></div><div class="task-list">${items}</div>${addForm}</div>`;
+}
+
+function renderAll() { document.getElementById('grid').innerHTML = teams.map(renderTeam).join(''); renderDueSection(); }
+function renderDueSection() {
+  const allDue = [];
+  teams.forEach(team => { (tasks[team.id]||[]).forEach(t => { if(t.status!=='done' && dlDiff(t.deadline) !== null && dlDiff(t.deadline) <= 2) allDue.push({task:t, teamName:team.name, diff: dlDiff(t.deadline)}); }); });
+  const sec = document.getElementById('due-section');
+  const grid = document.getElementById('due-tasks-grid');
+  if(!allDue.length) { sec.classList.add('hidden'); return; }
+  sec.classList.remove('hidden');
+  allDue.sort((a,b)=>a.diff - b.diff);
+  grid.innerHTML = allDue.map(e => {
+    const diff = e.diff;
+    let cc, icon, when;
+    if(diff < 0){ const d=Math.abs(Math.round(diff)); cc='overdue'; icon='🔴'; when=`${d} day${d!==1?'s':''} overdue`; }
+    else if(diff===0){ cc='duetoday'; icon='🟠'; when='Due TODAY'; }
+    else { cc='soon'; icon='🟡'; when=diff===1?'Due Tomorrow':`Due in ${Math.round(diff)} days`; }
+    return `<div class="due-chip ${cc}"><div class="due-chip-icon">${icon}</div><div class="due-chip-body"><div class="due-chip-title">${esc(e.task.title)}</div><div class="due-chip-meta">${e.task.member?`👤 ${esc(e.task.member)} · `:''}<span class="team">${esc(e.teamName)}</span><br><span class="when">${when}</span></div></div></div>`;
+  }).join('');
+}
+
+function logAction(a, d) { logs.unshift({timestamp:Date.now(), lead:admin.name, action:a, details:d}); if(logs.length>100) logs.pop(); saveLogs(); }
+function openLogs() { renderLogs(); document.getElementById('logOverlay').classList.add('open'); }
+function closeLogs() { document.getElementById('logOverlay').classList.remove('open'); }
+function renderLogs() { document.getElementById('logList').innerHTML = logs.length===0?'<div class="empty-msg">No activity recorded yet</div>' : logs.map(l => `<div class="log-item"><div class="log-meta"><span class="log-lead">👤 ${esc(l.lead)}</span><span class="log-time">${new Date(l.timestamp).toLocaleString()}</span></div><strong>${esc(l.action)}:</strong> ${esc(l.details)}</div>`).join(''); }
+function tick() { 
+  const now = new Date();
+  document.getElementById('cTime').textContent = now.toLocaleTimeString('en-GB'); 
+  document.getElementById('cDate').textContent = now.toLocaleDateString('en-GB', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
+}
+function toggleDueSection() { const grid = document.getElementById('due-tasks-grid'); const btn = document.querySelector('.due-section-toggle'); if(grid.style.display==='none'){ grid.style.display='flex'; btn.textContent='Hide'; } else { grid.style.display='none'; btn.textContent='Show'; } }
+
+/* ── TICKER ENGINE ── */
+const HOLD_MS  = 5500;   
+const GAP_MS   = 700;    
+let tickerIdx  = 0;
+let tickerEl   = null;   
+let tickerTmr  = null;
+
+function getTickerItems() {
+  const items = [];
+  teams.forEach(team => {
+    (tasks[team.id]||[]).forEach(t => {
+      if (t.status === 'done') return;
+      const diff = dlDiff(t.deadline);
+      if (diff === null || diff > 2) return;
+      items.push({ task: t, teamName: team.name, diff });
+    });
+  });
+  return items.sort((a,b) => a.diff - b.diff);
+}
+
+function tickerType(diff) { return diff < 0 ? 'overdue' : diff === 0 ? 'today' : 'soon'; }
+
+function tickerBadgeLabel(diff) {
+  if (diff < 0) {
+    const d = Math.abs(Math.round(diff));
+    return `🔴 OVERDUE — ${d} DAY${d!==1?'S':''} AGO`;
+  }
+  if (diff === 0) return '🟠 DUE TODAY';
+  if (diff === 1) return '🟡 DUE TOMORROW';
+  return `🟡 DUE IN ${Math.round(diff)} DAYS`;
+}
+
+function showTickerItem(item, idx, total) {
+  const wrap  = document.getElementById('alert-ticker');
+  const diff  = item.diff;
+  const type  = tickerType(diff);
+  const label = tickerBadgeLabel(diff);
+
+  const card = document.createElement('div');
+  card.className = `ticker-card type-${type}`;
+  card.innerHTML = `
+    <div class="ticker-progress"><div class="ticker-progress-bar" id="tpb"></div></div>
+    <div class="ticker-stripe"></div>
+    <div class="ticker-label-row">
+      <div class="ticker-label">${label}</div>
+      <div class="ticker-counter">${idx+1} / ${total}</div>
+    </div>
+    <div class="ticker-task">${esc(item.task.title)}</div>
+    <div class="ticker-person-row">
+      ${item.task.member ? `<span class="ticker-person">👤 ${esc(item.task.member)}</span>` : ''}
+      <span class="ticker-team-tag">${esc(item.teamName)}</span>
+    </div>
+    <div class="ticker-deadline">📅 ${fmtDate(item.task.deadline)}</div>
+    <div class="ticker-footer">
+      <img class="ticker-meme-img" src="https://media.tenor.com/XNc8L58GZ_QAAAAC/bonk-dog.gif"
+           alt="bonk" onerror="this.style.display='none'">
+      <div class="ticker-meme-text">Oi <strong>${esc(item.task.member||'someone')}</strong>,<br>get this done! 🐕 <em>bonk</em></div>
+    </div>
+  `;
+
+  wrap.appendChild(card);
+  tickerEl = card;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    card.classList.add('visible');
+    const bar = card.querySelector('#tpb');
+    if (bar) {
+      bar.style.transition = `width ${HOLD_MS}ms linear`;
+      requestAnimationFrame(() => { bar.style.width = '100%'; });
+    }
+  }));
+}
+
+function tickerNext() {
+  const items = getTickerItems();
+  const old = tickerEl;
+  if (old) {
+    old.classList.remove('visible');
+    old.classList.add('hiding');
+    setTimeout(() => old.remove(), 520);
+    tickerEl = null;
+  }
+  if (!items.length) {
+    tickerTmr = setTimeout(tickerNext, 60000);
+    return;
+  }
+  if (tickerIdx >= items.length) tickerIdx = 0;
+  const item = items[tickerIdx];
+  tickerIdx++;
+  setTimeout(() => {
+    showTickerItem(item, tickerIdx - 1, items.length);
+    tickerTmr = setTimeout(tickerNext, HOLD_MS + GAP_MS);
+  }, old ? 540 : 0);
+}
+
+function startTicker() {
+  if (tickerTmr) clearTimeout(tickerTmr);
+  tickerIdx = 0;
+  tickerTmr = setTimeout(tickerNext, 1800);
+}
+
+/* ── SEED DATA ── */
+function seedIfEmpty() {
+  if(!teams.some(t=>(tasks[t.id]||[]).length > 0)){
+    tasks.software.push(
+      {id:uid(),title:'Proximity (complete)',member:'Mathin',status:'todo',deadline:'2026-05-20',created:Date.now()},
+      {id:uid(),title:'Zed X setup',member:'Athin',status:'done',deadline:'',created:Date.now()}
+    );
+    tasks.mechanical.push(
+      {id:uid(),title:'Electrical body',member:'Ifti',status:'todo',deadline:'2026-05-20',created:Date.now()}
+    );
+    save(); renderAll();
+  }
+}
+
+/* ── INITIALIZATION ── */
+loadConfig();
+checkJoinCode();
+load();
+loadLogs();
+loadAdmin();
+renderAll();
+tick();
+setInterval(tick, 1000);
+startTicker();
+seedIfEmpty();
+</script>
+</body>
+</html>
