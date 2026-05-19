@@ -988,12 +988,36 @@ function startTicker() {
 /* ── SEED DATA ── */
 function seedIfEmpty() {
   if(!teams.some(t=>(tasks[t.id]||[]).length > 0)){
+    // Software & Autonomous
     tasks.software.push(
-      {id:uid(),title:'Proximity (complete)',member:'Mathin',status:'todo',deadline:'2026-05-20',created:Date.now()},
+      {id:uid(),title:'Proximity(complete)',member:'Mathin',status:'todo',deadline:'2026-05-20',created:Date.now()},
+      {id:uid(),title:'Camera Setup finalize with Servo Mechanism',member:'Athin',status:'inprog',deadline:'',created:Date.now()},
+      {id:uid(),title:'Full Drive and Arm Test',member:'Shoukhin',status:'inprog',deadline:'',created:Date.now()},
+      {id:uid(),title:'Motion',member:'Shokanto',status:'inprog',deadline:'',created:Date.now()},
       {id:uid(),title:'Zed X setup',member:'Athin',status:'done',deadline:'',created:Date.now()}
     );
+    // Mechanical
     tasks.mechanical.push(
-      {id:uid(),title:'Electrical body',member:'Ifti',status:'todo',deadline:'2026-05-20',created:Date.now()}
+      {id:uid(),title:'Electrical body',member:'Ifti',status:'todo',deadline:'2026-05-20',created:Date.now()},
+      {id:uid(),title:'Body Enclosure',member:'Mahir',status:'todo',deadline:'2026-05-22',created:Date.now()},
+      {id:uid(),title:'Chain Fix',member:'Nazmul, Mahir',status:'todo',deadline:'2026-05-20',created:Date.now()},
+      {id:uid(),title:'Suspension Mechanism Fix',member:'Nazmul',status:'inprog',deadline:'',created:Date.now()},
+      {id:uid(),title:'Arm fabrication and assemble',member:'Nazmul Illin Saad',status:'inprog',deadline:'',created:Date.now()}
+    );
+    // Electrical
+    tasks.electrical.push(
+      {id:uid(),title:'Wiring (dependency on electrical box)',member:'Partho Rois',status:'todo',deadline:'2026-05-22',created:Date.now()},
+      {id:uid(),title:'Jetson power cable (19/05/26)',member:'Partho',status:'done',deadline:'',created:Date.now()}
+    );
+    // Arena
+    tasks.arena.push(
+      {id:uid(),title:'Pallet and pipe and Door',member:'Rois',status:'todo',deadline:'2026-05-19',created:Date.now()},
+      {id:uid(),title:'Ramp',member:'Rois',status:'todo',deadline:'2026-05-20',created:Date.now()},
+      {id:uid(),title:'Step field, gravel',member:'Rois',status:'todo',deadline:'2026-05-21',created:Date.now()}
+    );
+    // 3D Prints
+    tasks.prints3d.push(
+      {id:uid(),title:'Electrical Box',member:'Ifti',status:'todo',deadline:'2026-05-21',created:Date.now()}
     );
     save(); renderAll();
   }
