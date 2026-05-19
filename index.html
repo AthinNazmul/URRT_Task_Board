@@ -217,14 +217,21 @@ main {
 
 /* ── TEAM CARD ── */
 .team-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
-.team-header { padding: 16px 18px 14px; border-bottom: 2px solid var(--teal-bd); background: var(--teal-lt); display: flex; align-items: center; gap: 10px; }
-.team-accent { width: 4px; height: 20px; border-radius: 2px; background: var(--teal); flex-shrink: 0; }
+.team-header { padding: 16px 18px 14px; border-bottom: 3px solid var(--teal); background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); display: flex; align-items: center; gap: 10px; }
+.team-accent { width: 4px; height: 20px; border-radius: 2px; background: #fff; flex-shrink: 0; }
 .team-name-wrap { flex: 1; min-width: 0; }
 .team-name {
-  font-size: 17px; font-weight: 800; color: var(--teal); display: block; letter-spacing: -0.01em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: color 0.1s;
+  font-size: 17px; font-weight: 800; color: #fff; display: block; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: all 0.2s;
 }
-.team-name:hover { color: var(--teal); text-decoration: underline; }
+.team-name:hover { color: #fff; text-decoration: underline; opacity: 0.9; }
+
+/* ── COLOR VARIANTS FOR SUBTEAMS ── */
+.team-card:nth-child(1) .team-header { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); border-bottom-color: #0d9488; }
+.team-card:nth-child(2) .team-header { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-bottom-color: #2563eb; }
+.team-card:nth-child(3) .team-header { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); border-bottom-color: #d97706; }
+.team-card:nth-child(4) .team-header { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); border-bottom-color: #7c3aed; }
+.team-card:nth-child(5) .team-header { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border-bottom-color: #dc2626; }
 .team-actions { display: flex; align-items: center; gap: 6px; }
 .team-count { font-family: 'DM Mono', monospace; font-size: 15px; color: var(--text-3); }
 .icon-btn {
